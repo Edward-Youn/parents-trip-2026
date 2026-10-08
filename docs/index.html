@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>부모님 수원·서울 나들이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: 한 줄 세로 흐름 — 예약 체크 → 날짜별 타임라인(도시 색 띠) → 식당 후보 → 공유 메모 → 기본 정보 */
+:root{
+  --bg:#f1f3ef;          /* 한지 위 옥빛 */
+  --surface:#fbfcfa;
+  --ink:#1c2422;         /* 먹 */
+  --muted:#5d6864;
+  --line:#d6ddd8;
+  --suwon:#b8461f;       /* 화성 성곽 단풍 */
+  --suwon-soft:#f6e3d9;
+  --seoul:#2c4a86;       /* 쪽빛 */
+  --seoul-soft:#dfe6f3;
+  --done:#3d7a55;
+  --warn:#9a6a00;
+  --warn-soft:#f6ecd0;
+  --display:"Gowun Batang","Nanum Myeongjo",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917;--surface:#1c2320;--ink:#e6ebe8;--muted:#9aa6a1;--line:#2e3834;
+  --suwon:#e07a52;--suwon-soft:#3a251c;--seoul:#8aa7e6;--seoul-soft:#1f2a40;
+  --done:#6cbf8c;--warn:#e0b450;--warn-soft:#3a3120;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917;--surface:#1c2320;--ink:#e6ebe8;--muted:#9aa6a1;--line:#2e3834;
+  --suwon:#e07a52;--suwon-soft:#3a251c;--seoul:#8aa7e6;--seoul-soft:#1f2a40;
+  --done:#6cbf8c;--warn:#e0b450;--warn-soft:#3a3120;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.3}
+a{color:inherit;text-decoration-color:var(--muted);text-underline-offset:3px}
+a:hover{text-decoration-color:currentColor}
+:focus-visible{outline:2px solid var(--seoul);outline-offset:2px;border-radius:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* Header */
+header{display:flex;flex-direction:column;gap:14px}
+header h1{font-size:clamp(28px,6vw,40px);font-weight:700}
+.route{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
+.chip.suwon{background:var(--suwon-soft);color:var(--suwon)}
+.chip.seoul{background:var(--seoul-soft);color:var(--seoul)}
+.chip.plain{background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.today{font-size:14px;color:var(--muted)}
+.today b{color:var(--ink)}
+
+/* Section */
+section{display:flex;flex-direction:column;gap:14px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}
+.sec-head h2{font-size:22px}
+.sec-head p{margin:0;color:var(--muted);font-size:13px}
+
+/* Sync status */
+.sync{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.sync.on{color:var(--done);border-color:currentColor}
+.sync.local{color:var(--warn);border-color:currentColor}
+
+/* Checklist */
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.group h3{font-family:var(--body);font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.group h3 span{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.todo{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-top:1px dashed var(--line)}
+.todo:first-of-type{border-top:0}
+.todo input[type=checkbox]{width:18px;height:18px;margin:3px 0 0;accent-color:var(--done);cursor:pointer}
+.todo .t{min-width:0;overflow-wrap:anywhere}
+.todo .t small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45}
+.todo .t a{font-size:12.5px;color:var(--seoul)}
+.todo.done .t>span{text-decoration:line-through;color:var(--muted)}
+.urgent{display:inline-block;font-size:11px;font-weight:600;color:var(--warn);background:var(--warn-soft);padding:0 6px;border-radius:4px;margin-right:4px;vertical-align:1px}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;padding:0 4px;font-size:16px;line-height:1.4;opacity:.5}
+.x:hover{opacity:1;color:var(--suwon)}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+.add{display:flex;flex-wrap:wrap;gap:8px}
+.add input,.add select,.memo-form textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.add input{flex:1 1 220px;min-width:0}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* Days */
+.days{display:flex;flex-direction:column;gap:28px}
+.day{display:grid;grid-template-columns:76px 1fr;gap:16px}
+.day-tag{display:flex;flex-direction:column;align-items:flex-start;gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start}
+.day-tag .d{font-family:var(--display);font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.day-tag .w{font-size:13px;color:var(--muted)}
+.day.suwon .d{color:var(--suwon)}
+.day.seoul .d{color:var(--seoul)}
+.day-body{display:flex;flex-direction:column;gap:10px;min-width:0}
+.day-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.day-title h3{font-size:19px}
+.day.is-today .day-title h3::after{content:"오늘";font-family:var(--body);font-size:11px;font-weight:600;margin-left:8px;padding:1px 7px;border-radius:999px;background:var(--ink);color:var(--bg);vertical-align:3px}
+.tl{list-style:none;margin:0;padding:0 0 0 14px;border-left:3px solid var(--line)}
+.day.suwon .tl{border-left-color:var(--suwon-soft)}
+.day.seoul .tl{border-left-color:var(--seoul-soft)}
+.tl li{display:grid;grid-template-columns:58px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.tl li:last-child{border-bottom:0}
+.tl .time{font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;padding-top:1px}
+.tl .what{min-width:0}
+.tl .what strong{font-weight:600}
+.tl .what p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.tl .what .links{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:12.5px}
+.tl .what .links a{color:var(--seoul)}
+.st{font-size:11px;font-weight:600;padding:1px 7px;border-radius:4px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.st.fixed{background:var(--ink);color:var(--bg)}
+.st.idea{border:1px solid var(--line);color:var(--muted)}
+.st.book{background:var(--warn-soft);color:var(--warn)}
+.note{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+
+/* Food */
+.food{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.food .col{display:flex;flex-direction:column;gap:0;min-width:0}
+.food h3{font-size:17px;padding-bottom:6px}
+.food .col.suwon h3{color:var(--suwon)}
+.food .col.seoul h3{color:var(--seoul)}
+.place{padding:9px 0;border-top:1px solid var(--line)}
+.place b{font-weight:600}
+.place .meta{color:var(--muted);font-size:13px}
+.place a{font-size:12.5px;color:var(--seoul)}
+
+/* Memo */
+.memo-form{display:flex;flex-direction:column;gap:8px}
+.memo-form textarea{width:100%;min-height:72px;resize:vertical}
+.memo-form .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.who{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.who button{background:transparent;border:0;padding:6px 12px;cursor:pointer;color:var(--muted)}
+.who button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.memos{display:flex;flex-direction:column;gap:10px}
+.memo{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px}
+.memo .body{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.memo .by{grid-column:1/-1;font-size:12px;color:var(--muted)}
+
+/* Info */
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 24px}
+.info dl{margin:0}
+.info dt{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.info dd{margin:2px 0 0;overflow-wrap:anywhere}
+.copy{margin-left:6px;font-size:12px;padding:1px 8px;border:1px solid var(--line);border-radius:6px;background:transparent;cursor:pointer}
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+@media (max-width:560px){
+  .day{grid-template-columns:1fr;gap:8px}
+  .day-tag{position:static;flex-direction:row;align-items:baseline;gap:8px}
+  .tl li{grid-template-columns:50px 1fr}
+}
+@media (prefers-reduced-motion:no-preference){.todo,.memo{transition:opacity .2s}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">2026 · 10월 8일 – 11일 · 한국시간</div>
+  <h1>부모님 수원·서울 나들이</h1>
+  <div class="route">
+    <span class="chip suwon">수원 · 8–9일 · 렌터카</span>
+    <span aria-hidden="true">→</span>
+    <span class="chip seoul">서울 서촌 · 10–11일 · 대중교통</span>
+    <span aria-hidden="true">→</span>
+    <span class="chip plain">11일 10:00 서울역 귀가</span>
+  </div>
+  <div class="today" id="today"></div>
+</header>
+
+<!-- 예약 체크리스트 (공유) -->
+<section id="todo">
+  <div class="sec-head">
+    <h2>지금 챙길 것</h2>
+    <span class="sync" id="sync">연결 중…</span>
+  </div>
+  <div class="groups" id="groups"></div>
+  <form class="add" id="addForm" autocomplete="off">
+    <input id="addText" placeholder="할 일 추가 (예: 렌터카 카시트 확인)" maxlength="200">
+    <select id="addCat" aria-label="분류">
+      <option value="book">예약</option>
+      <option value="shop">장보기·준비</option>
+      <option value="etc">기타</option>
+    </select>
+    <button class="btn" type="submit">추가</button>
+  </form>
+</section>
+
+<!-- 일정 -->
+<section id="plan">
+  <div class="sec-head">
+    <h2>날짜별 일정</h2>
+    <p><span class="st fixed">확정</span> <span class="st book">예약 필요</span> <span class="st idea">추천·후보</span></p>
+  </div>
+  <div class="days" id="days"></div>
+</section>
+
+<!-- 식당 -->
+<section id="food">
+  <div class="sec-head">
+    <h2>식당 후보</h2>
+    <p>영업시간·휴무는 가기 전 지도 앱에서 다시 확인</p>
+  </div>
+  <div class="food" id="foodList"></div>
+</section>
+
+<!-- 메모 -->
+<section id="memo">
+  <div class="sec-head">
+    <h2>같이 쓰는 메모</h2>
+    <p>아이디어, 부모님 취향, 바뀐 일정</p>
+  </div>
+  <form class="memo-form" id="memoForm">
+    <textarea id="memoText" placeholder="예: 아버님 매운 거 잘 못 드심 / 9일 점심 예약 13시로 변경" maxlength="1000"></textarea>
+    <div class="row">
+      <div class="who" role="group" aria-label="작성자">
+        <button type="button" data-who="나" aria-pressed="true">나</button>
+        <button type="button" data-who="여자친구" aria-pressed="false">여자친구</button>
+      </div>
+      <button class="btn" type="submit">메모 남기기</button>
+    </div>
+  </form>
+  <div class="memos" id="memos"></div>
+</section>
+
+<!-- 기본 정보 -->
+<section id="info">
+  <div class="sec-head"><h2>기본 정보</h2></div>
+  <div class="info">
+    <dl><dt>서울 숙소 (10–11일)</dt>
+      <dd><span id="addr">서울특별시 종로구 옥인6길 2</span><button class="copy" data-copy="addr" type="button">복사</button><br>
+      <a href="https://www.airbnb.co.kr/rooms/1496325132117116491" target="_blank" rel="noopener">에어비앤비 예약 페이지</a> ·
+      <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EC%A2%85%EB%A1%9C%EA%B5%AC%20%EC%98%A5%EC%9D%B86%EA%B8%B8%202" target="_blank" rel="noopener">지도</a></dd></dl>
+    <dl><dt>가까운 역</dt><dd>3호선 경복궁역 (도보 약 12분) · 통인시장·수성동계곡 바로 옆</dd></dl>
+    <dl><dt>궁 휴궁일</dt><dd>경복궁 화요일 · 창덕궁 월요일 → 10일(토) 둘 다 개방</dd></dl>
+    <dl><dt>궁 입장 꿀팁</dt><dd>한복 입으면 경복궁 무료 · 만 65세 이상 무료 (신분증)</dd></dl>
+    <dl><dt>9일은 한글날 공휴일</dt><dd>수원화성문화제(10.4–11) 기간과 겹쳐 행궁 주변 주차 혼잡</dd></dl>
+    <dl><dt>문화제 문의</dt><dd><a href="https://www.shfestival.com" target="_blank" rel="noopener">shfestival.com</a> · 031-5191-3647</dd></dl>
+  </div>
+</section>
+
+<footer>
+  체크리스트와 메모는 이 링크를 가진 사람끼리 공유돼요(15초마다 새로고침). 일정·식당 정보는 2026년 10월 8일 기준으로 정리한 것이라 운영시간은 방문 전 한 번 더 확인해 주세요.
+</footer>
+</div>
+
+<script>
+(function(){
+  /* 구글 Apps Script 웹 앱 URL (https://script.google.com/macros/s/.../exec). 비워두면 이 기기에만 저장 */
+  const SHEET_API = "";
+  const map = q => "https://map.naver.com/p/search/" + encodeURIComponent(q);
+
+  /* ───────── 일정 데이터 ───────── */
+  const DAYS = [
+    { date:"2026-10-08", d:"8", w:"목", city:"suwon", title:"부모님 도착 · 집밥 육회 상", items:[
+      {t:"16:05", s:"fixed", n:"부모님 버스 출발", p:"도착 터미널(수원종합버스터미널 등) 미리 확인해 두기"},
+      {t:"20:10", s:"fixed", n:"수원 도착 · 마중", p:"차 빌렸다면 터미널 앞 정차 위치 미리 공유. 짐 많으시면 바로 차로."},
+      {t:"20:40", n:"집 도착 · 짐 풀기", p:"4시간 버스 타셨으니 씻고 편하게 쉬시도록"},
+      {t:"21:00", s:"fixed", n:"저녁: 육회 · 육사시미 · 계란국 · 죽순나물", p:"고기는 당일 정육점에서 육회용(우둔/홍두깨) 사오기. 늦은 저녁이라 양은 넉넉하되 가볍게."},
+      {t:"22:30", n:"내일 일정 간단히 공유하고 취침", p:"9일은 공휴일 + 수원화성문화제라 아침 일찍 움직이는 게 편해요"}
+    ]},
+    { date:"2026-10-09", d:"9", w:"금 · 한글날", city:"suwon", title:"일월수목원 · 광교산 · 수원화성 야경", items:[
+      {t:"08:30", n:"아침 · 출발 준비"},
+      {t:"09:30", s:"idea", n:"일월수목원", p:"09:30 개장(월 휴원). 온실·정원 산책 1.5–2시간. 여자친구 + 부모님이 먼저 관람, 나는 내려드리고 병원으로.", q:"일월수목원"},
+      {t:"11:00", s:"fixed", n:"나: 병원 진료", p:"끝나면 수목원 또는 광교산 식당에서 합류"},
+      {t:"12:30", s:"book", n:"점심: 광교산 바베큐", p:"여자친구 원픽. 수목원에서 차로 15–20분. 공휴일이라 단체 손님이 많을 수 있으니 전화로 자리 확인하고 가기.", q:"광교산 바베큐"},
+      {t:"14:30", s:"idea", n:"수원화성 성곽 산책", p:"연무대 쪽 주차 → 화성어차(현장 매표, 공휴일 조기 매진 주의) 또는 방화수류정·용연 → 화홍문 → 장안문. 부모님 체력에 맞춰 구간만 걷기.", q:"방화수류정"},
+      {t:"16:30", s:"idea", n:"행궁동 행리단길 카페에서 쉬기", q:"행리단길"},
+      {t:"18:00", s:"book", n:"저녁: 수원 왕갈비 또는 통닭거리", p:"수원에 오셨으니 왕갈비 추천. 축제 + 공휴일이라 예약·원격줄서기 필수.", q:"수원 왕갈비"},
+      {t:"19:00", s:"book", n:"수원화성문화제 야간 프로그램", p:"선유몽 19:00(용연) · 야조 20:00(연무대) · 행궁야화 19/20/21시(화성행궁). 장소와 입구가 각각 달라요. 일부 좌석은 예약제.", url:"https://www.shfestival.com", ul:"문화제 공식 사이트"},
+      {t:"21:30", n:"귀가 · 서울 짐 싸기", p:"10일 아침 렌터카 반납 시간 확인"}
+    ]},
+    { date:"2026-10-10", d:"10", w:"토", city:"seoul", title:"서울 서촌 · 경복궁 궁투어", items:[
+      {t:"08:30", n:"아침 · 짐 싣고 출발"},
+      {t:"09:00", n:"렌터카 반납 → 서울 이동", p:"4명 + 캐리어면 대형 택시(카카오T 벤티 등)로 숙소 앞까지 약 1시간이 가장 편해요. 대중교통이면 1호선 수원역 → 서울역 후 택시."},
+      {t:"10:30", s:"book", n:"숙소에 짐 맡기기", p:"옥인6길 2. 얼리 짐보관 가능한지 호스트에게 미리 문의. 안 되면 경복궁역 물품보관함.", q:"서울특별시 종로구 옥인6길 2"},
+      {t:"11:00", s:"idea", n:"이른 점심: 토속촌 삼계탕", p:"숙소에서 걸어서 10분. 점심 피크 전에 가야 웨이팅이 짧아요.", q:"토속촌 삼계탕"},
+      {t:"12:00", s:"book", n:"한복 대여 (선택)", p:"경복궁역 주변 대여점. 한복 입으면 경복궁 무료 입장 + 사진이 훨씬 예뻐요. 부모님이 원하시면.", q:"경복궁 한복대여"},
+      {t:"13:40", s:"idea", n:"광화문 수문장 교대식 보고 입장", p:"10:00·14:00 진행(화 휴무). 14시 회차 보고 바로 경복궁 입장.", q:"광화문"},
+      {t:"14:10", s:"idea", n:"경복궁", p:"근정전 → 사정전 → 경회루 → 향원정. 출구 쪽 국립민속박물관(무료)까지. 2시간 이상 걸어요.", q:"경복궁"},
+      {t:"16:30", s:"idea", n:"숙소 체크인 · 휴식", p:"부모님 쉬시는 동안 저녁 장소 확정. 여유 있으면 북촌·삼청동 산책(북촌 한옥 골목은 17시까지 관광 허용)."},
+      {t:"18:30", s:"idea", n:"저녁: 서촌 또는 광장시장", p:"서촌이면 숙소 근처라 편하고, 광장시장(빈대떡·마약김밥)은 3호선+1호선으로 25분.", q:"서촌 맛집"},
+      {t:"20:00", s:"book", n:"밤의 궁 (잔여석 있으면)", p:"창덕궁 달빛기행(10.17까지 목–일) 또는 경복궁 별빛야행(10.24까지). 둘 다 대부분 매진이라 취소표만 노려보기. 없으면 청계천·광화문광장 야경 산책.", q:"청계광장"}
+    ]},
+    { date:"2026-10-11", d:"11", w:"일", city:"seoul", title:"서울역 배웅", items:[
+      {t:"07:30", s:"idea", n:"수성동계곡 아침 산책", p:"숙소 바로 위 인왕산 자락. 겸재 정선 그림 속 그 계곡이에요. 20–30분이면 충분.", q:"수성동계곡"},
+      {t:"08:30", n:"짐 정리 · 체크아웃"},
+      {t:"09:00", n:"택시로 서울역", p:"약 4km, 일요일 오전이면 15–20분. 버스면 넉넉히 30분 이상."},
+      {t:"09:30", n:"서울역 도착 · 기차 안에서 드실 간식·도시락 사드리기"},
+      {t:"10:00", s:"fixed", n:"부모님 기차 출발", p:"서울역 출발 열차인지(KTX/ITX/무궁화) 승차권 다시 확인"}
+    ]}
+  ];
+
+  const FOOD = [
+    {city:"suwon", label:"수원", list:[
+      {n:"광교산 바베큐 식당들", m:"9일 점심 · 여자친구 원픽 · 상광교 일대 숯불구이", q:"광교산 바베큐"},
+      {n:"가보정", m:"수원 왕갈비 대표 · 인계동 · 대기 많음", q:"가보정"},
+      {n:"본수원갈비", m:"수원 왕갈비 노포 · 우만동", q:"본수원갈비"},
+      {n:"수원 통닭거리", m:"팔달문 앞 · 가마솥 통닭 · 화성 야경과 동선 좋음", q:"수원 통닭거리"},
+      {n:"행리단길 카페", m:"화성행궁 주변 한옥 카페 · 오후 휴식용", q:"행리단길 카페"}
+    ]},
+    {city:"seoul", label:"서울", list:[
+      {n:"토속촌 삼계탕", m:"서촌 · 숙소 도보 10분 · 경복궁 앞 대표 맛집", q:"토속촌 삼계탕"},
+      {n:"통인시장 엽전도시락", m:"서촌 · 엽전으로 반찬 골라 담기 · 기름떡볶이", q:"통인시장"},
+      {n:"체부동 잔치집", m:"서촌 · 잔치국수·파전 · 저녁 가볍게", q:"체부동 잔치집"},
+      {n:"삼청동수제비", m:"삼청동 · 북촌 산책 동선", q:"삼청동수제비"},
+      {n:"광장시장", m:"종로5가 · 빈대떡·육회·마약김밥 · 시장 구경", q:"광장시장"},
+      {n:"인사동 전통찻집", m:"오후에 쌍화차·대추차 한 잔", q:"인사동 전통찻집"}
+    ]}
+  ];
+
+  /* ───────── 렌더: 오늘 / 일정 / 식당 ───────── */
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const kstDate = () => new Date(Date.now() + 9*3600e3).toISOString().slice(0,10);
+  const today = kstDate();
+
+  (function renderToday(){
+    const box = document.getElementById("today");
+    const start = Date.UTC(2026,9,8), now = Date.parse(today);
+    const diff = Math.round((start - now)/864e5);
+    const dayIdx = DAYS.findIndex(d => d.date === today);
+    if (dayIdx >= 0) { box.innerHTML = ""; box.append("오늘은 ", el("b", null, `여행 ${dayIdx+1}일차`), ` · ${DAYS[dayIdx].title}`); }
+    else if (diff > 0) { box.innerHTML = ""; box.append("부모님 오시기까지 ", el("b", null, `${diff}일`)); }
+    else box.textContent = "즐거운 여행이었기를!";
+  })();
+
+  const stLabel = {fixed:"확정", book:"예약 필요", idea:"추천"};
+  const daysBox = document.getElementById("days");
+  DAYS.forEach(day => {
+    const art = el("article", `day ${day.city}` + (day.date === today ? " is-today" : ""));
+    art.id = "d" + day.d;
+    const tag = el("div", "day-tag");
+    tag.append(el("span", "d", day.d), el("span", "w", `10월 · ${day.w}`));
+    const body = el("div", "day-body");
+    const tt = el("div", "day-title");
+    tt.append(el("h3", null, day.title), el("span", `chip ${day.city}`, day.city === "suwon" ? "수원 · 차" : "서울 · 대중교통"));
+    const ol = el("ol", "tl");
+    day.items.forEach(it => {
+      const li = el("li");
+      const what = el("div", "what");
+      const name = el("strong", null, it.n);
+      what.append(name);
+      if (it.s) what.append(el("span", `st ${it.s}`, stLabel[it.s]));
+      if (it.p) what.append(el("p", null, it.p));
+      if (it.q || it.url) {
+        const links = el("div", "links");
+        if (it.q) { const a = el("a", null, "네이버 지도 ↗"); a.href = map(it.q); a.target = "_blank"; a.rel = "noopener"; links.append(a); }
+        if (it.url) { const a = el("a", null, (it.ul || "링크") + " ↗"); a.href = it.url; a.target = "_blank"; a.rel = "noopener"; links.append(a); }
+        what.append(links);
+      }
+      li.append(el("span", "time", it.t), what);
+      ol.append(li);
+    });
+    body.append(tt, ol);
+    art.append(tag, body);
+    daysBox.append(art);
+  });
+
+  const foodBox = document.getElementById("foodList");
+  FOOD.forEach(c => {
+    const col = el("div", `col ${c.city}`);
+    col.append(el("h3", null, c.label));
+    c.list.forEach(f => {
+      const p = el("div", "place");
+      const a = el("a", null, "지도 ↗"); a.href = map(f.q); a.target = "_blank"; a.rel = "noopener";
+      p.append(el("b", null, f.n), " ", a, el("div", "meta", f.m));
+      col.append(p);
+    });
+    foodBox.append(col);
+  });
+
+  /* ───────── 공유 저장소 (db → 없으면 이 기기 localStorage) ───────── */
+  const syncEl = document.getElementById("sync");
+  const LS = {
+    get(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
+  const LOCAL_DEFAULT = [
+    {text:"렌터카 예약 (8일 저녁 또는 9일 아침 픽업, 10일 아침 반납)", cat:"book", urgent:true, order:1},
+    {text:"수원화성문화제 9일 야간 공연 좌석 확인", cat:"book", urgent:true, order:2, link:"https://www.shfestival.com"},
+    {text:"9일 점심 광교산 바베큐 식당 전화 예약", cat:"book", urgent:true, order:3},
+    {text:"9일 저녁 수원 왕갈비 예약", cat:"book", order:4},
+    {text:"에어비앤비 호스트에게 10일 오전 짐 보관 문의", cat:"book", order:5},
+    {text:"11일 10:00 서울역 열차 승차권 재확인", cat:"book", order:6},
+    {text:"육회·육사시미용 소고기", cat:"shop", order:10},
+    {text:"계란국 · 죽순나물 재료", cat:"shop", order:11}
+  ];
+
+  let store = null;      // {mode, addTodo, toggleTodo, delTodo, addMemo, delMemo}
+  let todos = [], memos = [];
+
+  function setSync(mode){
+    if (mode === "db") { syncEl.textContent = "실시간 공유 중"; syncEl.className = "sync on"; }
+    else { syncEl.textContent = "이 기기에만 저장됨"; syncEl.className = "sync local"; syncEl.title = "claude.ai에서 열면 두 사람이 함께 볼 수 있어요"; }
+  }
+
+  function localStore(){
+    let t = LS.get("trip.todos"), m = LS.get("trip.memos");
+    if (!Array.isArray(t)) { t = LOCAL_DEFAULT.map((x,i) => ({...x, id:"l"+i, done:false})); LS.set("trip.todos", t); }
+    if (!Array.isArray(m)) m = [];
+    todos = t; memos = m;
+    const save = () => { LS.set("trip.todos", todos); LS.set("trip.memos", memos); renderTodos(); renderMemos(); };
+    return {
+      mode:"local",
+      addTodo: async d => { todos = [...todos, {...d, id:"l"+Date.now()}]; save(); },
+      toggleTodo: async (id, done) => { todos = todos.map(x => x.id === id ? {...x, done} : x); save(); },
+      delTodo: async id => { todos = todos.filter(x => x.id !== id); save(); },
+      addMemo: async d => { memos = [{...d, id:"m"+Date.now()}, ...memos]; save(); },
+      delMemo: async id => { memos = memos.filter(x => x.id !== id); save(); }
+    };
+  }
+
+  function dbStore(db){
+    const tc = db.collection("todos"), mc = db.collection("memos");
+    tc.orderBy("order").onSnapshot(s => { todos = s.docs.map(d => ({id:d.id, ...d.data()})); renderTodos(); }, onDbErr);
+    mc.orderBy("at","desc").limit(200).onSnapshot(s => { memos = s.docs.map(d => ({id:d.id, ...d.data()})); renderMemos(); }, onDbErr);
+    return {
+      mode:"db",
+      addTodo: d => tc.add(d),
+      toggleTodo: (id, done) => tc.doc(id).update({done}),
+      delTodo: id => tc.doc(id).delete(),
+      addMemo: d => mc.add(d),
+      delMemo: id => mc.doc(id).delete()
+    };
+  }
+  function onDbErr(e){ syncEl.textContent = "공유 연결이 끊겼어요 · 새로고침"; syncEl.className = "sync local"; }
+  function writeErr(e){
+    if (e && e.code === "invalid_argument") { readOnly = true; applyReadOnly(); syncEl.textContent = "보기 전용"; }
+    else if (e && e.code === "quota_exceeded") { syncEl.textContent = "저장 공간이 가득 찼어요 · 오래된 메모를 지워 주세요"; syncEl.className = "sync local"; }
+  }
+  let readOnly = false;
+  function applyReadOnly(){
+    document.querySelectorAll("#addForm button, #addForm input, #addForm select, #memoForm button, #memoForm textarea").forEach(x => x.disabled = readOnly);
+    renderTodos(); renderMemos();
+  }
+
+  /* 체크리스트 */
+  const CATS = [{k:"book", n:"예약할 것"}, {k:"shop", n:"8일 저녁 장보기·준비"}, {k:"etc", n:"기타"}];
+  const groupsBox = document.getElementById("groups");
+  function renderTodos(){
+    groupsBox.innerHTML = "";
+    CATS.forEach(c => {
+      const items = todos.filter(t => (t.cat || "etc") === c.k);
+      if (c.k === "etc" && !items.length) return;
+      const g = el("div", "group");
+      const h = el("h3", null, c.n);
+      h.append(el("span", null, `${items.filter(i => i.done).length}/${items.length}`));
+      g.append(h);
+      if (!items.length) g.append(el("div", "empty", store ? "아직 없어요. 아래에서 추가해 주세요." : "불러오는 중…"));
+      items.forEach(t => {
+        const row = el("div", "todo" + (t.done ? " done" : ""));
+        const cb = el("input"); cb.type = "checkbox"; cb.checked = !!t.done; cb.id = "cb-" + t.id; cb.disabled = readOnly;
+        cb.addEventListener("change", () => store.toggleTodo(t.id, cb.checked).catch(writeErr));
+        const lab = el("label", "t"); lab.htmlFor = cb.id;
+        if (t.urgent && !t.done) lab.append(el("span", "urgent", "오늘"));
+        lab.append(el("span", null, t.text));
+        if (t.memo) lab.append(el("small", null, t.memo));
+        if (t.link) { const a = el("a", null, "열기 ↗"); a.href = t.link; a.target = "_blank"; a.rel = "noopener"; lab.append(" ", a); }
+        const x = el("button", "x", "×"); x.type = "button"; x.title = "삭제"; x.setAttribute("aria-label", "삭제: " + t.text); x.hidden = readOnly;
+        x.addEventListener("click", () => store.delTodo(t.id).catch(writeErr));
+        row.append(cb, lab, x);
+        g.append(row);
+      });
+      groupsBox.append(g);
+    });
+  }
+
+  document.getElementById("addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const inp = document.getElementById("addText");
+    const text = inp.value.trim();
+    if (!text || !store) return;
+    const cat = document.getElementById("addCat").value;
+    const order = Math.max(0, ...todos.map(t => t.order || 0)) + 1;
+    store.addTodo({text, cat, done:false, order}).then(() => { inp.value = ""; }).catch(writeErr);
+  });
+
+  /* 메모 */
+  let who = LS.get("trip.who") || "나";
+  const whoBtns = document.querySelectorAll(".who button");
+  function paintWho(){ whoBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.who === who))); }
+  whoBtns.forEach(b => b.addEventListener("click", () => { who = b.dataset.who; LS.set("trip.who", who); paintWho(); }));
+  paintWho();
+
+  const memosBox = document.getElementById("memos");
+  const fmt = ms => { const d = new Date(ms + 9*3600e3); return `${d.getUTCMonth()+1}/${d.getUTCDate()} ${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`; };
+  function renderMemos(){
+    memosBox.innerHTML = "";
+    if (!memos.length) { memosBox.append(el("div", "empty", store ? "첫 메모를 남겨 보세요. 부모님 입맛, 바뀐 시간, 가고 싶은 곳 무엇이든." : "불러오는 중…")); return; }
+    memos.forEach(m => {
+      const box = el("div", "memo");
+      const x = el("button", "x", "×"); x.type = "button"; x.setAttribute("aria-label", "메모 삭제"); x.hidden = readOnly;
+      x.addEventListener("click", () => store.delMemo(m.id).catch(writeErr));
+      box.append(el("div", "body", m.text), x, el("div", "by", `${m.who || "?"} · ${m.at ? fmt(m.at) : ""}`));
+      memosBox.append(box);
+    });
+  }
+  document.getElementById("memoForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const ta = document.getElementById("memoText");
+    const text = ta.value.trim();
+    if (!text || !store) return;
+    store.addMemo({text, who, at:Date.now()}).then(() => { ta.value = ""; }).catch(writeErr);
+  });
+
+  /* 복사 버튼 */
+  document.querySelectorAll(".copy").forEach(b => b.addEventListener("click", () => {
+    const txt = document.getElementById(b.dataset.copy).textContent;
+    const done = () => { b.textContent = "복사됨"; setTimeout(() => b.textContent = "복사", 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => selectText(b.dataset.copy)); else selectText(b.dataset.copy);
+  }));
+  function selectText(id){ const r = document.createRange(); r.selectNodeContents(document.getElementById(id)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+  renderTodos(); renderMemos();
+
+  /* 구글 시트(Apps Script) 공유 저장소 — 계정 없이 링크만으로 함께 편집 */
+  function sheetStore(){
+    const apply = s => { if (s && Array.isArray(s.todos)) { todos = s.todos.slice().sort((a,b) => (a.order||0)-(b.order||0)); memos = (s.memos||[]).slice().sort((a,b) => (b.at||0)-(a.at||0)); renderTodos(); renderMemos(); } };
+    let busy = 0;
+    const pull = () => busy ? Promise.resolve() : fetch(SHEET_API).then(r => r.json()).then(s => { if (!busy) apply(s); setSync("db"); }).catch(() => { syncEl.textContent = "연결 재시도 중…"; syncEl.className = "sync local"; });
+    const send = body => { busy++; return fetch(SHEET_API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(body)})
+      .then(r => r.json()).then(s => { busy--; if (!busy) apply(s); })
+      .catch(e => { busy--; syncEl.textContent = "저장 실패 · 다시 시도해 주세요"; syncEl.className = "sync local"; pull(); }); };
+    pull();
+    setInterval(() => { if (!document.hidden) pull(); }, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) pull(); });
+    const id = () => "x" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    return {
+      mode:"db",
+      addTodo: async d => { const t = {...d, id:id()}; todos = [...todos, t]; renderTodos(); return send({op:"addTodo", item:t}); },
+      toggleTodo: async (tid, done) => { todos = todos.map(x => x.id === tid ? {...x, done} : x); renderTodos(); return send({op:"toggleTodo", id:tid, done}); },
+      delTodo: async tid => { todos = todos.filter(x => x.id !== tid); renderTodos(); return send({op:"delTodo", id:tid}); },
+      addMemo: async d => { const m = {...d, id:id()}; memos = [m, ...memos]; renderMemos(); return send({op:"addMemo", item:m}); },
+      delMemo: async mid => { memos = memos.filter(x => x.id !== mid); renderMemos(); return send({op:"delMemo", id:mid}); }
+    };
+  }
+
+  /* 연결: 구글 시트 → (claude.ai 안이면) db → 이 기기 저장 */
+  const start = db => { store = db ? dbStore(db) : localStore(); setSync(store.mode); renderTodos(); renderMemos(); };
+  const inClaude = window.claude && typeof window.claude.use === "function";
+  if (SHEET_API && !inClaude) { store = sheetStore(); }
+  else if (inClaude) { window.claude.use("db").then(db => start(db), () => start(null)); }
+  else start(null);
+})();
+</script>
+
+</body>
+</html>
