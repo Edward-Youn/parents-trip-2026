@@ -7,17 +7,17 @@ const SHEET_NAME = 'state';
 const MAX_TEXT = 1000;
 
 const DEFAULT_TODOS = [
-  {id:'b1', cat:'book', order:1, urgent:true, done:false, text:'렌터카 예약 (8일 저녁 또는 9일 아침 픽업, 10일 아침 반납)', memo:'4명 + 짐이 들어가는 차급으로'},
-  {id:'b2', cat:'book', order:2, urgent:true, done:false, text:'수원화성문화제 9일 야간 공연 좌석 확인 (야조·선유몽·행궁야화)', link:'https://www.shfestival.com'},
-  {id:'b3', cat:'book', order:3, urgent:true, done:false, text:'9일 점심 폭포농원식당 전화 예약', memo:'공휴일이라 붐빔 · 12:30 전후'},
-  {id:'b4', cat:'book', order:4, done:false, text:'9일 저녁 수원 왕갈비 예약 / 원격 줄서기'},
+  {id:'b1', cat:'book', order:1, urgent:true, done:false, text:'수원화성문화제 9일 야간 공연 좌석 확인 (선유몽·야조·행궁야화)', link:'https://www.shfestival.com'},
+  {id:'b2', cat:'book', order:2, urgent:true, done:false, text:'9일 점심 폭포농원식당 전화로 자리 확인', memo:'031-256-9774 · 12:15 전후'},
+  {id:'b3', cat:'book', order:3, urgent:true, done:false, text:'10일 수원역 → 서울역 기차 예매 (ITX-새마을·무궁화)', memo:'코레일톡 · 09:10 전후'},
+  {id:'b4', cat:'book', order:4, done:false, text:'9일 저녁 연포갈비 웨이팅 방법 확인'},
   {id:'b5', cat:'book', order:5, done:false, text:'에어비앤비 호스트에게 10일 오전 짐 보관 · 체크인 시간 문의'},
-  {id:'b6', cat:'book', order:6, done:false, text:'10일 창덕궁 달빛기행 / 경복궁 별빛야행 취소표 확인', memo:'없으면 청계천·광화문광장 야경 산책으로'},
+  {id:'b6', cat:'book', order:6, done:false, text:'10일 창덕궁 달빛기행 / 경복궁 별빛야행 취소표 확인'},
   {id:'b7', cat:'book', order:7, done:false, text:'10일 한복 대여 예약 (부모님이 원하시면)'},
   {id:'b8', cat:'book', order:8, done:false, text:'11일 10:00 서울역 출발 열차 승차권 재확인'},
-  {id:'s1', cat:'shop', order:10, done:false, text:'육회·육사시미용 소고기 (우둔/홍두깨, 당일 구매)'},
-  {id:'s2', cat:'shop', order:11, done:false, text:'육회 양념: 배, 참기름, 마늘, 잣, 계란 노른자'},
-  {id:'s3', cat:'shop', order:12, done:false, text:'계란국 · 죽순나물 재료'},
+  {id:'s1', cat:'shop', order:10, done:false, text:'꾸리살 300g (육회) · 꾸리살·설깃살 600g (뭉티기)'},
+  {id:'s2', cat:'shop', order:11, done:false, text:'배 · 계란 · 구운 김 · 무순 · 청양고추 · 통마늘'},
+  {id:'s3', cat:'shop', order:12, done:false, text:'순두부 1팩 · 대파 · 묵은지 · 냉동 죽순 해동'},
   {id:'s4', cat:'shop', order:13, done:false, text:'부모님 주무실 이부자리·수건 준비'}
 ];
 
